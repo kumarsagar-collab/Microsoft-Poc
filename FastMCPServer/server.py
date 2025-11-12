@@ -90,7 +90,7 @@ mcp = FastMCP(
     #event_store=event_store,  # Optional: Enable resumability with custom EventStore
     log_level="DEBUG",
 )
-
+low_level_server = mcp._mcp_server
 
 @mcp.tool()
 async def process_data(
