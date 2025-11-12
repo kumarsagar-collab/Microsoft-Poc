@@ -1,6 +1,23 @@
 # MCP StreamableHTTP Servers
 
-This repository contains two MCP (Model Context Protocol) server implementations demonstrating StreamableHTTP transport.
+This repository contains two MCP (Model Context Protocol) server implementations demonstrating StreamableHTTP transport. Each server has different characteristics and is suited for different use cases.
+
+## 🚀 Quick Start
+
+```bash
+# Install dependencies
+uv sync
+
+# Run FastMCP Server (port 8000)
+uv run mcp-fastmcp-server
+
+# Run LowLevel Server (port 3000)
+uv run mcp-lowlevel-server
+```
+
+
+
+⚠️ **Note:** FastMCP requires clients to send `Accept: application/json, text/event-stream` header. MCP Inspector may not send these headers by default.
 
 ## Available Servers
 
@@ -20,6 +37,25 @@ uv run mcp-fastmcp-server
 - Cache and database integration
 - Tools: `process_data`, `get_metrics`, `stream_notifications`
 - Resources: `state://metrics`, `state://cache/{key}`
+
+**Client Requirements:**
+```python
+import httpx
+
+response = httpx.post(
+    "http://localhost:8000/mcp",
+    headers={
+        "Content-Type": "application/json",
+        "Accept": "application/json, text/event-stream"  # Required!
+    },
+    json={
+        "jsonrpc": "2.0",
+        "method": "initialize",
+        "id": 1,
+        "params": {...}
+    }
+)
+```
 
 ### 2. LowLevel MCP Server
 Low-level MCP server implementation with notification streaming.
@@ -45,6 +81,38 @@ uv run mcp-lowlevel-server --port 3000 --log-level DEBUG
 - Event store for resumability
 - CORS support
 - Tool: `start-notification-stream`
+- Works with MCP Inspector out-of-the-box
+
+**Client Requirements:**
+```python
+import httpx
+
+# Standard headers work fine
+response = httpx.post(
+    "http://localhost:3000/mcp",
+    headers={
+        "Content-Type": "application/json",
+        "Accept": "application/json"  # Standard header
+    },
+    json={
+        "jsonrpc": "2.0",
+        "method": "initialize",
+        "id": 1,
+        "params": {...}
+    }
+)
+```
+
+## 🧪 Testing with MCP Inspector
+
+**✅ Recommended:** Use the LowLevel Server
+```
+URL: http://localhost:3000/mcp/
+```
+
+⚠️ **Important:** The trailing slash is required! Use `http://localhost:3000/mcp/` not `http://localhost:3000/mcp`
+
+**⚠️ Not Recommended:** FastMCP Server requires custom Accept headers that Inspector may not send by default.
 
 ## Installation
 

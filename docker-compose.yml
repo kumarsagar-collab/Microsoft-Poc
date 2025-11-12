@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  fastmcp-server:
+    build: .
+    container_name: mcp-fastmcp-server
+    command: mcp-fastmcp-server
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - MCP_HOST=0.0.0.0
+      - MCP_PORT=8000
+    networks:
+      - mcp-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8000/mcp', timeout=2.0)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  lowlevel-server:
+    build: .
+    container_name: mcp-lowlevel-server
+    command: mcp-lowlevel-server --port 3000 --log-level INFO
+    ports:
+      - "3000:3000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - MCP_HOST=0.0.0.0
+    networks:
+      - mcp-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:3000/mcp', timeout=2.0)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+networks:
+  mcp-network:
+    driver: bridge

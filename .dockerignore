@@ -1,0 +1,48 @@
+# Git
+.git/
+.gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Distribution
+build/
+dist/
+*.egg-info/
+
+# Test
+.pytest_cache/
+.coverage
+
+# Environment
+.env
+*.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# UV
+uv.lock
+
+# Python version
+.python-version
+
+# Docker
+.dockerignore

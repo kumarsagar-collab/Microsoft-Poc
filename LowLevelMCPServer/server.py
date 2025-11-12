@@ -159,7 +159,10 @@ def main(
     )
 
     import uvicorn
+    import os
 
-    uvicorn.run(starlette_app, host="127.0.0.1", port=port)
+    # Use 0.0.0.0 for Docker, 127.0.0.1 for local
+    host = os.getenv("MCP_HOST", "127.0.0.1")
+    uvicorn.run(starlette_app, host=host, port=port)
 
     return 0

@@ -98,7 +98,7 @@ async def process_data(
     steps: int = 3,
     ctx: Context[ServerSession, AppState] = None,  # type: ignore
 ) -> str:
-    """Process data with full observability and state management."""
+    """Process hotel booking data with full observability and state management."""
     # Access shared state
     app_state = ctx.request_context.lifespan_context
     app_state.metrics["requests"] += 1
@@ -222,7 +222,13 @@ async def cache_resource(key: str, ctx: Context[ServerSession, AppState]) -> str
 
 def main():
     """Main entry point for the MCP server."""
-    print("""
+    import os
+    import uvicorn
+    
+    host = os.getenv("MCP_HOST", "127.0.0.1")
+    port = int(os.getenv("MCP_PORT", "8000"))
+    
+    print(f"""
 Starting Complete StreamableHTTP MCP Server
 Features:
   ✓ StreamableHTTP transport
@@ -232,8 +238,18 @@ Features:
   ✓ Event store for resumability
   ✓ Shared resources (database, cache)
 
-Server will be available at: http://127.0.0.1:8000/mcp
+Server will be available at: http://{host}:{port}/mcp
     """)
+    
+    # Monkey patch uvicorn.run to use custom host and port
+    original_run = uvicorn.run
+    
+    def patched_run(app, **kwargs):
+        kwargs['host'] = host
+        kwargs['port'] = port
+        return original_run(app, **kwargs)
+    
+    uvicorn.run = patched_run
     
     # Run with StreamableHTTP transport
     mcp.run(transport="streamable-http")
