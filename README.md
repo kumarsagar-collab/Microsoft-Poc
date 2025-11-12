@@ -57,6 +57,16 @@ response = httpx.post(
 )
 ```
 
+**Testing FastMCP Server (Docker):**
+
+Since FastMCP requires strict Accept headers, test it using this command from PowerShell:
+
+```bash
+docker exec mcp-fastmcp-server python -c "import httpx; r = httpx.post('http://localhost:8000/mcp', headers={'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream'}, json={'jsonrpc': '2.0', 'method': 'initialize', 'id': 1, 'params': {'protocolVersion': '2024-11-05', 'capabilities': {}, 'clientInfo': {'name': 'test', 'version': '1.0'}}}, timeout=5); print(f'Status: {r.status_code}'); print(f'Body: {r.text}')"
+```
+
+Expected output: `Status: 200` with MCP initialization response.
+
 ### 2. LowLevel MCP Server
 Low-level MCP server implementation with notification streaming.
 

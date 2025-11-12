@@ -14,12 +14,6 @@ services:
     networks:
       - mcp-network
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8000/mcp', timeout=2.0)"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
 
   lowlevel-server:
     build: .
@@ -33,12 +27,6 @@ services:
     networks:
       - mcp-network
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:3000/mcp', timeout=2.0)"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
 
 networks:
   mcp-network:
