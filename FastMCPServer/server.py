@@ -1,15 +1,15 @@
 """
 StreamableHTTP MCP Server with FastMCP and ServerSession Management
 
-This example demonstrates all the features you need:
+This example demonstrates caching with MCP:
 - StreamableHTTP transport
+- Logging and Notifications
 - Memory/state management via lifespan
-- Observability (logging, progress, notifications)
+- Caching demonstration with process_and_cache tool
 - Session management (stateful mode)
-- Event store for resumability
 
 Run from the repository root:
-    uv run examples/snippets/servers/streamable_http_complete.py
+    uv run mcp-fastmcp-server
 """
 
 from collections.abc import AsyncIterator
@@ -81,31 +81,28 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppState]:
         await db.disconnect()
 
 
-# Create FastMCP server with all features
-# Note: event_store parameter is optional - only needed for resumability
+# Create FastMCP server with caching demonstration
 mcp = FastMCP(
-    "CompleteStreamableHTTPServer",
-    instructions="A complete MCP server with memory, observability, and session management",
+    "CachingDemoServer",
+    instructions="MCP server demonstrating caching with process_and_cache tool",
     lifespan=app_lifespan,
-    #event_store=event_store,  # Optional: Enable resumability with custom EventStore
     log_level="DEBUG",
 )
 low_level_server = mcp._mcp_server
 
 @mcp.tool()
-async def process_data(
+async def process_and_cache(
     data: str,
-    steps: int = 3,
     ctx: Context[ServerSession, AppState] = None,  # type: ignore
 ) -> str:
-    """Process hotel booking data with full observability and state management."""
+    """Process hotel booking data with caching demonstration."""
     # Access shared state
     app_state = ctx.request_context.lifespan_context
     app_state.metrics["requests"] += 1
     
     # Logging
     await ctx.info(f"Processing request {app_state.metrics['requests']}")
-    await ctx.debug(f"Input data: {data}, steps: {steps}")
+    await ctx.debug(f"Input data: {data}")
     
     # Check cache
     cache_key = f"result:{data}"
@@ -114,30 +111,12 @@ async def process_data(
         await ctx.info("Returning cached result")
         return f"Cached: {cached}"
     
-    # Process with progress updates
-    result_parts = []
-    for i in range(steps):
-        await ctx.report_progress(
-            progress=(i + 1) / steps,
-            total=1.0,
-            message=f"Processing step {i + 1}/{steps}",
-        )
-        
-        # Simulate work with database
-        db_result = await app_state.db.query(f"SELECT * FROM data WHERE id = {i}")
-        result_parts.append(db_result[0]["data"]) # type: ignore
-        
-        await ctx.debug(f"Completed step {i + 1}")
-    
-    result = f"Processed {data}: {', '.join(result_parts)}" # type: ignore
+    # Simulate work with database
+    db_result = await app_state.db.query(f"SELECT * FROM data WHERE input = '{data}'")
+    result = f"Processed {data}: {db_result[0]['data']}"
     
     # Store in cache
     await app_state.cache.set(cache_key, result)
-    
-    # Send notifications
-    # Note: Use URL-safe encoding for cache keys to avoid validation issues
-    safe_cache_key = cache_key.replace(":", "_")
-    await ctx.session.send_resource_updated(uri=AnyUrl(f"cache://{safe_cache_key}"))
     
     await ctx.info(f"Processing complete. Total requests: {app_state.metrics['requests']}")
     
@@ -229,13 +208,12 @@ def main():
     port = int(os.getenv("MCP_PORT", "8000"))
     
     print(f"""
-Starting Complete StreamableHTTP MCP Server
+Starting MCP Caching Demo Server
 Features:
   ✓ StreamableHTTP transport
   ✓ Memory/state management (lifespan)
-  ✓ Observability (logging, progress, notifications)
+  ✓ Caching demonstration (process_and_cache tool)
   ✓ Session management (stateful)
-  ✓ Event store for resumability
   ✓ Shared resources (database, cache)
 
 Server will be available at: http://{host}:{port}/mcp
